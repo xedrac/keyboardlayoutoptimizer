@@ -1,9 +1,10 @@
 
 TARGET= keyboardlayoutoptimizer 
-OBJS= keyboardlayoutoptimizer.o \
+OBJS= main.o \
+      keyboardlayoutoptimizer.o \
       configuration.o
 
-CC = g++
+CC = mpiCC
 CPPFLAGS += -O2 -Wall
 LIBS = -lrt
 

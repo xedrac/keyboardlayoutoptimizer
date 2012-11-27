@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <float.h>
 #include <time.h>
 #include <sys/time.h>
 #include <math.h>
@@ -10,13 +11,6 @@
 
 
 char qwerty_layout[NUMKEYS+1]  = { "`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./" };
-char dvorak_layout[NUMKEYS+1]  = { "`1234567890[]',.pyfgcrl/=\\aoeuidhtns-;qjkxbmwvz" };
-char colemak_layout[NUMKEYS+1] = { "`1234567890-=qwfpgjluy;[]\\arstdhneio'zxcvbkm,./" }; 
-char workman_layout[NUMKEYS+1] = { "`1234567890-=qdrwbjfup;[]\\ashtgyneoi'zxmcvkl,./" };
-char bulpkm_layout[NUMKEYS+1]  = { "`1234567890-='bulpkmyf;[]\\riaohdtensjzxcvqgw,./" };
-char xfyl_layout[NUMKEYS+1]    = { "`1234567890-=xfyljkpuw;[]\\asinhdtero'zb.mqgc,v/" };
-char test_layout[NUMKEYS+1]    = { "`1234567890-=tkpb'oqc,.[]\\r/;sxfzvgwluyemdnihja" };
-
 
 // table containing information on which hand, row, finger
 // a given key index corresponds to.
@@ -121,7 +115,8 @@ uint8_t layoutMask[NUMKEYS] = {
 
 KeyboardLayoutOptimizer::KeyboardLayoutOptimizer()
 {
-    srand(time(0));
+    _bestlayoutscore = DBL_MAX;
+    _bestlayout = "";
 
     for (int i=0; i<NUMKEYS; i++) {
         for (int j=0; j<NUMKEYS; j++) {
@@ -307,8 +302,8 @@ double KeyboardLayoutOptimizer::optimizeLayout(char *layout, int iterations, dou
     curr_layout[NUMKEYS]=0;
     prev_effort = computeLayoutEffort(prev_layout);    
 
-    struct timespec ts0, ts1;
-    clock_gettime(CLOCK_MONOTONIC, &ts0);
+    //struct timespec ts0, ts1;
+    //clock_gettime(CLOCK_MONOTONIC, &ts0);
 
     do {
         curr_effort = computeLayoutEffort(curr_layout);        
@@ -322,14 +317,18 @@ double KeyboardLayoutOptimizer::optimizeLayout(char *layout, int iterations, dou
 
         // Always accept new layout if better than previous layout
         if (effortdelta < 0) {
-            printLayoutTransition(i, prev_layout, curr_layout, prev_effort, curr_effort, p, t, true);
+            //printLayoutTransition(i, prev_layout, curr_layout, prev_effort, curr_effort, p, t, true);
             prev_effort = curr_effort;
             memcpy(prev_layout, curr_layout, NUMKEYS);
 
-            // Sometimes accept new layout if worse than previous
+            // store the best layout we've seen so far
+            _bestlayout = curr_layout;
+            _bestlayoutscore = curr_effort;
+
+        // Sometimes accept new layout if worse than previous
         } else {
             if (p*10000 > random_range(0, 10000)) {
-                printLayoutTransition(i, prev_layout, curr_layout, prev_effort, curr_effort, p, t, true);
+                //printLayoutTransition(i, prev_layout, curr_layout, prev_effort, curr_effort, p, t, true);
                 prev_effort = curr_effort;
                 memcpy(prev_layout, curr_layout, NUMKEYS);
             } else {
@@ -338,18 +337,18 @@ double KeyboardLayoutOptimizer::optimizeLayout(char *layout, int iterations, dou
         }
 
         if (iwindow++ == 32768) {  // print average layouts per/sec calculated
-            clock_gettime(CLOCK_MONOTONIC, &ts1);
-            double elapsed = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec)/1000000000.0;
-            printf("avg_layouts_per_sec: %.2f\n", iwindow/elapsed);
-            clock_gettime(CLOCK_MONOTONIC, &ts0);
+            //clock_gettime(CLOCK_MONOTONIC, &ts1);
+            //double elapsed = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec)/1000000000.0;
+            //printf("avg_layouts_per_sec: %.2f\n", iwindow/elapsed);
+            //clock_gettime(CLOCK_MONOTONIC, &ts0);
             iwindow = 0;
         }
 
         swapLayoutKeys(curr_layout, 1, 3, layoutMask);
     } while (++i < iterations);
 
-    printf("%3.6f = \"%s\"\n", prev_effort, prev_layout);
-    printLayout(prev_layout);
+    //printf("%3.6f = \"%s\"\n", prev_effort, prev_layout);
+    //printLayout(prev_layout);
 
     return prev_effort;
 }
@@ -461,22 +460,22 @@ void KeyboardLayoutOptimizer::printTriads()
 void KeyboardLayoutOptimizer::showLayouts()
 { 
     double qwerty_effort  = computeLayoutEffort(qwerty_layout);
-    double dvorak_effort  = computeLayoutEffort(dvorak_layout);
-    double colemak_effort = computeLayoutEffort(colemak_layout);
-    double workman_effort = computeLayoutEffort(workman_layout);
-    double bulpkm_effort  = computeLayoutEffort(bulpkm_layout);
-    double xfyl_effort    = computeLayoutEffort(xfyl_layout);
-    double test_effort    = computeLayoutEffort(test_layout);
+    //double dvorak_effort  = computeLayoutEffort(dvorak_layout);
+    //double colemak_effort = computeLayoutEffort(colemak_layout);
+    //double workman_effort = computeLayoutEffort(workman_layout);
+    //double bulpkm_effort  = computeLayoutEffort(bulpkm_layout);
+    //double xfyl_effort    = computeLayoutEffort(xfyl_layout);
+    //double test_effort    = computeLayoutEffort(test_layout);
 
     printf("Comparison: \n\n");
     printf("%20s: %10.8f\n", "Qwerty",  qwerty_effort);
-    printf("%20s: %10.8f\n", "Dvorak",  dvorak_effort);
-    printf("%20s: %10.8f\n", "Colemak", colemak_effort);
-    printf("%20s: %10.8f\n", "Workman", workman_effort);
-    printf("%20s: %10.8f\n", "Bulpkm",  bulpkm_effort);
-    printf("%20s: %10.8f\n", "Xfyl",    xfyl_effort);
-    printf("%20s: %10.8f\n", "Test",    test_effort);
-    printf("\n\n");
+    //printf("%20s: %10.8f\n", "Dvorak",  dvorak_effort);
+    //printf("%20s: %10.8f\n", "Colemak", colemak_effort);
+    //printf("%20s: %10.8f\n", "Workman", workman_effort);
+    //printf("%20s: %10.8f\n", "Bulpkm",  bulpkm_effort);
+    //printf("%20s: %10.8f\n", "Xfyl",    xfyl_effort);
+    //printf("%20s: %10.8f\n", "Test",    test_effort);
+    //printf("\n\n");
 }
 
 
@@ -550,6 +549,7 @@ void KeyboardLayoutOptimizer::showDigraphs(int sortbyfreq)
 }
 
 
+#if 0
 int main(int argc, char **argv)
 {
     KeyboardLayoutOptimizer klo;
@@ -599,6 +599,7 @@ int main(int argc, char **argv)
 #endif
     return 0;    
 }
+#endif
 
 
 double KeyboardLayoutOptimizer::computeTriadEffort(int ikey1, int ikey2, int ikey3)

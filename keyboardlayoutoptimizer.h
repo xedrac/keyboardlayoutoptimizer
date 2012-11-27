@@ -84,6 +84,9 @@ public:
     void buildCharToIndexMap(char *layout);
     bool parseTriads(const string &file, uint8_t mode);
 
+    string getBestLayout()      { return _bestlayout; }
+    double getBestLayoutScore() { return _bestlayoutscore; }
+
 private:
     double getTriadEffort(int ikey1, int ikey2, int ikey3);
     double getTriadEffort(const string &triad);
@@ -104,9 +107,6 @@ private:
     // maps ascii characters to indices within the current layout
     uint8_t _chartoindex[0xFF];
 
-    // indexed by "hrf" (hand,row,finger) flags to get the path_cost
-    double _pathcosttable[300];
-
     // map of all triads to their frequency as found in the corpus
     map<string, int> _triadmap;
 
@@ -116,17 +116,11 @@ private:
     // frequency of all digraphs found in the corpus
     int _digraphs[0x7F][0x7F];
 
+    string _bestlayout;
+    double _bestlayoutscore;
+
     Configuration _config;
 };
-
-
-
-#if 0
-char test_layout[LAYOUTSIZE+1] = {
-	"`1234567890-=tkpb'oqc,.[]\\r/;sxfzvgwluyemdnihja"
-	"~!@#$%^&*()_+TKPB\"OQC<>{}|R?:SXFZVGWLUYEMDNIHJA"
-};
-#endif
 
 
 #endif // KEYBOARDLAYOUTOPTIMIZER_H
